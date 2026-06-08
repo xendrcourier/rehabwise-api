@@ -20,15 +20,21 @@ enum Language {
 }
 
 enum SessionStatus {
-  done
-  missed
-  partial
+  DONE
+  MISSED
+  PARTIAL
 }
 
 enum AlertType {
-  missed
-  pain
-  confusion
+  MISSED
+  PAIN
+  CONFUSION
+}
+
+enum Role {
+  THERAPIST
+  PATIENT
+  ADMIN
 }
 
 model Therapist {
@@ -99,7 +105,7 @@ model Session {
   pain_before    Int?
   pain_after     Int?
   confusion_flag Boolean       @default(false)
-  status         SessionStatus @default(missed)
+  status         SessionStatus @default(MISSED)
   created_at     DateTime      @default(now())
 
   patient_id String
