@@ -11,3 +11,114 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum Language {
+  yo
+  en
+  ha
+  ig
+}
+
+enum SessionStatus {
+  done
+  missed
+  partial
+}
+
+enum AlertType {
+  missed
+  pain
+  confusion
+}
+
+model Therapist {
+  id         String   @id @default(uuid())
+  full_name  String
+  email      String   @unique
+  phone      String
+  created_at DateTime @default(now())
+
+  patients Patient[]
+  alerts   Alert[]
+}
+
+model Patient {
+  id          String   @id @default(uuid())
+  full_name   String
+  phone       String
+  language    Language @default(yo)
+  diagnosis   String?
+  enrolled_at DateTime @default(now())
+
+  therapist_id String
+  therapist    Therapist @relation(fields: [therapist_id], references: [id])
+
+  programs Program[]
+  sessions Session[]
+  alerts   Alert[]
+}
+
+model Exercise {
+  id              String @id @default(uuid())
+  name_en         String
+  name_yo         String
+  video_watch_url String
+  video_doit_url  String
+  body_part       String
+  default_sets    Int    @default(3)
+  default_reps    Int    @default(10)
+
+  programs Program[]
+}
+
+model Program {
+  id            String   @id @default(uuid())
+  sets          Int
+  reps          Int
+  freq_per_week Int
+  start_date    DateTime
+  end_date      DateTime
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+
+  patient_id String
+  patient    Patient @relation(fields: [patient_id], references: [id])
+
+  exercise_id String
+  exercise    Exercise @relation(fields: [exercise_id], references: [id])
+
+  sessions Session[]
+}
+
+model Session {
+  id             String        @id @default(uuid())
+  scheduled_date DateTime
+  completed_at   DateTime?
+  watch_demo     Boolean       @default(false)
+  sets_done      Int           @default(0)
+  pain_before    Int?
+  pain_after     Int?
+  confusion_flag Boolean       @default(false)
+  status         SessionStatus @default(missed)
+  created_at     DateTime      @default(now())
+
+  patient_id String
+  patient    Patient @relation(fields: [patient_id], references: [id])
+
+  program_id String
+  program    Program @relation(fields: [program_id], references: [id])
+}
+
+model Alert {
+  id           String    @id @default(uuid())
+  alert_type   AlertType
+  triggered_at DateTime  @default(now())
+  resolved     Boolean   @default(false)
+  resolved_at  DateTime?
+
+  patient_id String
+  patient    Patient @relation(fields: [patient_id], references: [id])
+
+  therapist_id String
+  therapist    Therapist @relation(fields: [therapist_id], references: [id])
+}
