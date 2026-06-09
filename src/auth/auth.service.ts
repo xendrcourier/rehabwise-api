@@ -38,7 +38,7 @@ export class AuthService {
   async onboardUser() {}
 
   async onboardTherapist(data: OnboardTherapistDto) {
-    const { email, full_name, phone } = data;
+    const { email, full_name, phone, password } = data;
 
     if (
       await this.prismaClient.therapist.findFirst({
@@ -51,5 +51,18 @@ export class AuthService {
         'Therapist with this email or phone number already exists',
       );
     }
+
+    const hashedPassword = await this.authUtil.hashPassword(password);
+
+    const therapist = await this.prismaClient.therapist.create({
+      data: {
+        email,
+        full_name,
+        phone,
+        password: hashedPassword,
+      },
+    });
+
+    return 'therapist created successfully';
   }
 }
