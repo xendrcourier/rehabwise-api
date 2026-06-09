@@ -42,6 +42,8 @@ model Therapist {
   full_name  String
   email      String   @unique
   phone      String
+  password   String
+  role       Role     @default(THERAPIST)
   created_at DateTime @default(now())
 
   patients Patient[]
