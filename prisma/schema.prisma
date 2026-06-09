@@ -132,3 +132,15 @@ model Alert {
   therapist_id String
   therapist    Therapist @relation(fields: [therapist_id], references: [id])
 }
+
+model RefreshTokenBlacklist {
+  id        String   @id @default(uuid())
+  reference String   @unique @db.VarChar(255)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // FIX: changed name: to map: to match the convention used across the entire schema
+  @@index([expiresAt], map: "idx_blacklist_expires")
+  @@map("refresh_token_blacklist")
+}
