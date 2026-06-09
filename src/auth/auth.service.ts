@@ -63,7 +63,12 @@ export class AuthService {
       },
     });
 
-    return 'patient created successfully';
+    const { __access, __refresh } = await this.generateAuthTokenPairs(
+      patient.id,
+      Role.PATIENT,
+    );
+
+    return { __access, __refresh };
   }
 
   async onboardTherapist(data: OnboardTherapistDto) {
@@ -92,6 +97,11 @@ export class AuthService {
       },
     });
 
-    return 'therapist created successfully';
+    const { __access, __refresh } = await this.generateAuthTokenPairs(
+      therapist.id,
+      Role.THERAPIST,
+    );
+
+    return { __access, __refresh };
   }
 }
