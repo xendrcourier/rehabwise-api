@@ -8,6 +8,7 @@ import * as ms from 'ms';
 import { OnboardTherapistDto } from './dtos/auth.therapist.dto';
 import { OnboardPatientDto } from './dtos/auth.patient.dto';
 import { AuthRefreshDto } from './dtos/auth.refresh.dto';
+import { AuthLoginDto } from './dtos/auth.login.dto';
 
 @Injectable()
 export class AuthService {
@@ -140,6 +141,45 @@ export class AuthService {
     const { __access, __refresh } = await this.generateAuthTokenPairs(
       therapist.id,
       Role.THERAPIST,
+    );
+
+    return { __access, __refresh };
+  }
+
+  async login(data: AuthLoginDto, role: Role) {
+    const { email, phone, password } = data;
+    let user: { id: string; password: string } | null = null;
+
+    if (role === Role.PATIENT) {
+      user = await this.prismaClient.patient.findUnique({
+        where: {
+          OR: [{ email }, { phone }],
+        },
+      });
+    } else if (role === Role.THERAPIST) {
+      user = await this.prismaClient.therapist.findUnique({
+        where: {
+          OR: [{ email }, { phone }],
+        },
+      });
+    }
+
+    if (!user) {
+      throw new BadRequestException('Invalid credentials');
+    }
+
+    const isPasswordValid = await this.authUtil.verifyPassword(
+      password,
+      user.password,
+    );
+
+    if (!isPasswordValid) {
+      throw new BadRequestException('Invalid credentials');
+    }
+
+    const { __access, __refresh } = await this.generateAuthTokenPairs(
+      user.id,
+      role,
     );
 
     return { __access, __refresh };
