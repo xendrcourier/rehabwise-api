@@ -6,6 +6,7 @@ import { Role } from 'generated/prisma/enums';
 import { generateRandomString } from 'src/global/utils/text';
 import * as ms from 'ms';
 import { OnboardTherapistDto } from './dtos/auth.therapist.dto';
+import { OnboardPatientDto } from './dtos/auth.patient.dto';
 
 @Injectable()
 export class AuthService {
@@ -35,7 +36,35 @@ export class AuthService {
     };
   }
 
-  async onboardUser() {}
+  async onboardUser(data: OnboardPatientDto) {
+    const { email, full_name, phone, password, diagnosis } = data;
+
+    if (
+      await this.prismaClient.patient.findFirst({
+        where: {
+          OR: [{ email }, { phone }],
+        },
+      })
+    ) {
+      throw new BadRequestException(
+        'Patient with this email or phone number already exists',
+      );
+    }
+
+    const hashedPassword = await this.authUtil.hashPassword(password);
+
+    const patient = await this.prismaClient.patient.create({
+      data: {
+        email,
+        full_name,
+        phone,
+        password: hashedPassword,
+        diagnosis,
+      },
+    });
+
+    return 'patient created successfully';
+  }
 
   async onboardTherapist(data: OnboardTherapistDto) {
     const { email, full_name, phone, password } = data;

@@ -5,10 +5,9 @@ import {
   IsPhoneNumber,
   Matches,
   MinLength,
-  isString,
 } from 'class-validator';
 
-export class OnboardTherapistDto {
+export class OnboardPatientDto {
   @IsString()
   @IsNotEmpty()
   full_name!: string;
@@ -21,6 +20,10 @@ export class OnboardTherapistDto {
     message: 'Phone must be a valid international number',
   })
   phone!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  diagnosis?: string;
 
   @IsString()
   @IsNotEmpty()
