@@ -7,6 +7,7 @@ import { generateRandomString } from 'src/global/utils/text';
 import * as ms from 'ms';
 import { OnboardTherapistDto } from './dtos/auth.therapist.dto';
 import { OnboardPatientDto } from './dtos/auth.patient.dto';
+import { AuthRefreshDto } from './dtos/auth.refresh.dto';
 
 @Injectable()
 export class AuthService {
@@ -34,6 +35,45 @@ export class AuthService {
       __access,
       __refresh,
     };
+  }
+
+  private async _blacklistRefreshToken(reference: string) {
+    await this.prismaClient.refreshTokenBlacklist.create({
+      data: {
+        reference: reference,
+        expiresAt: new Date(
+          Date.now() + ms(`${CONFIGS.REFRESH_TOKEN_LIFETIME_DAYS}d`),
+        ),
+      },
+    });
+  }
+
+  private async _validateRefresh(refreshToken: string) {
+    // 1. validate token
+    const payload = (await this.authUtil.verifyToken(refreshToken)) as {
+      type: string;
+      reference: string;
+      userId: string;
+      role: Role;
+    };
+    if (payload.type !== 'refresh')
+      throw new BadRequestException('Invalid refresh token');
+
+    if (!payload.reference)
+      throw new BadRequestException('Invalid refresh token, missing reference');
+
+    // 2. validate if blacklisted
+    const refreshTokenBlackList =
+      await this.prismaClient.refreshTokenBlacklist.findUnique({
+        where: { reference: payload.reference },
+      });
+
+    if (refreshTokenBlackList)
+      throw new BadRequestException(
+        'Refresh token invalid, already blacklisted',
+      );
+
+    return payload;
   }
 
   async onboardUser(data: OnboardPatientDto) {
@@ -103,5 +143,28 @@ export class AuthService {
     );
 
     return { __access, __refresh };
+  }
+
+  async logout(input: AuthRefreshDto) {
+    const payload = await this._validateRefresh(input.refreshToken);
+
+    // 1. blacklist refresh token
+    await this._blacklistRefreshToken(payload.reference);
+
+    return {
+      message: 'Logout successful',
+    };
+  }
+
+  async refresh(input: AuthRefreshDto) {
+    const payload = await this._validateRefresh(input.refreshToken);
+
+    // 1. blacklist refresh token
+    await this._blacklistRefreshToken(payload.reference);
+
+    // 2. generate new token pairs
+    const tokens = this.generateAuthTokenPairs(payload.userId, payload.role);
+
+    return tokens;
   }
 }
