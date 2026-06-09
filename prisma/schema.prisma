@@ -52,7 +52,7 @@ model Patient {
   id          String   @id @default(uuid())
   full_name   String
   phone       String
-  language    Language @default(yo)
+  language    Language @default(en)
   diagnosis   String?
   enrolled_at DateTime @default(now())
 

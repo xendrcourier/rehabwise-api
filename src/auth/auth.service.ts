@@ -3,6 +3,8 @@ import { AuthUtilService } from './auth.utils';
 import { PrismaService } from 'src/global/prisma/prisma.service';
 import { CONFIGS } from 'src/configs';
 import { Role } from 'generated/prisma/enums';
+import { generateRandomString } from 'src/global/utils/text';
+import * as ms from 'ms';
 
 @Injectable()
 export class AuthService {
@@ -31,4 +33,6 @@ export class AuthService {
       __refresh,
     };
   }
+
+  async onboardUser() {}
 }
