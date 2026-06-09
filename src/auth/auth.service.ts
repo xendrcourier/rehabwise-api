@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { AuthUtilService } from './auth.utils';
 import { PrismaService } from 'src/global/prisma/prisma.service';
 import { CONFIGS } from 'src/configs';
 import { Role } from 'generated/prisma/enums';
 import { generateRandomString } from 'src/global/utils/text';
 import * as ms from 'ms';
+import { OnboardTherapistDto } from './dtos/auth.therapist.dto';
 
 @Injectable()
 export class AuthService {
@@ -35,4 +36,20 @@ export class AuthService {
   }
 
   async onboardUser() {}
+
+  async onboardTherapist(data: OnboardTherapistDto) {
+    const { email, full_name, phone } = data;
+
+    if (
+      await this.prismaClient.therapist.findFirst({
+        where: {
+          OR: [{ email }, { phone }],
+        },
+      })
+    ) {
+      throw new BadRequestException(
+        'Therapist with this email or phone number already exists',
+      );
+    }
+  }
 }

@@ -1,12 +1,32 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  IsPhoneNumber,
+  Matches,
+  MinLength,
+} from 'class-validator';
 
 export class OnboardTherapistDto {
+  @IsString()
   @IsNotEmpty()
   full_name!: string;
 
-  @IsEmail()
-  email?: string;
+  @IsEmail({}, { message: 'Invalid email format' })
+  email!: string;
+
+  // Option A: Use a generic phone validator
+  @IsPhoneNumber('NG', {
+    message: 'Phone must be a valid international number',
+  })
+  phone!: string;
 
   @IsString()
-  phone!: string;
+  @IsNotEmpty()
+  @MinLength(8, { message: 'Password must be at least 8 characters long' })
+  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
+    message:
+      'Password is too weak. It must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number or special character.',
+  })
+  password!: string;
 }
