@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { ExerciseModule } from './exercise/exercise.module';
 import { ProgramModule } from './program/program.module';
+import { PrismaModule } from './global/prisma/prisma.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ProgramModule } from './program/program.module';
         limit: 20,
       },
     ]),
+    PrismaModule,
     AuthModule,
     ExerciseModule,
     ProgramModule,

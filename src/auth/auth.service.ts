@@ -91,7 +91,8 @@ export class AuthService {
   }
 
   async onboardUser(data: OnboardPatientDto) {
-    const { email, full_name, phone, password, diagnosis } = data;
+    const { email, full_name, phone, password, diagnosis, therapist_id } =
+      data;
 
     if (
       await this.prismaClient.patient.findFirst({
@@ -105,6 +106,14 @@ export class AuthService {
       );
     }
 
+    const therapist = await this.prismaClient.therapist.findUnique({
+      where: { id: therapist_id },
+    });
+
+    if (!therapist) {
+      throw new BadRequestException('Invalid therapist_id');
+    }
+
     const hashedPassword = await this.authUtil.hashPassword(password);
 
     const patient = await this.prismaClient.patient.create({
@@ -114,6 +123,7 @@ export class AuthService {
         phone,
         password: hashedPassword,
         diagnosis,
+        therapist_id,
       },
     });
 
@@ -194,8 +204,8 @@ export class AuthService {
     }
     await this.prismaClient.authSession.create({
       data: {
-        userId: user.id,
-        last_accessed_at: new Date(),
+        user_id: user.id,
+        last_accessed: new Date(),
       },
     });
     const { __access, __refresh } = await this.generateAuthTokenPairs(

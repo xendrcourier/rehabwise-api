@@ -3,6 +3,7 @@ import {
   IsNotEmpty,
   IsString,
   IsPhoneNumber,
+  IsUUID,
   Matches,
   MinLength,
 } from 'class-validator';
@@ -20,6 +21,10 @@ export class OnboardPatientDto {
     message: 'Phone must be a valid international number',
   })
   phone!: string;
+
+  @IsUUID(undefined, { message: 'therapist_id must be a valid id' })
+  @IsNotEmpty({ message: 'therapist_id is required' })
+  therapist_id!: string;
 
   @IsString()
   @IsNotEmpty()
