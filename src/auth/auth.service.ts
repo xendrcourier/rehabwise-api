@@ -192,7 +192,12 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new BadRequestException('Invalid credentials');
     }
-
+    await this.prismaClient.authSession.create({
+      data: {
+        userId: user.id,
+        last_accessed_at: new Date(),
+      },
+    });
     const { __access, __refresh } = await this.generateAuthTokenPairs(
       user.id,
       role,
