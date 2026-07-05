@@ -144,3 +144,15 @@ model RefreshTokenBlacklist {
   @@index([expiresAt], map: "idx_blacklist_expires")
   @@map("refresh_token_blacklist")
 }
+
+model AuthSession {
+  id      String @id @default(uuid())
+  user_id String
+
+  last_accessed DateTime
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@index([last_accessed], map: "idx_auth_session_expires")
+  @@map("auth_sessions")
+}

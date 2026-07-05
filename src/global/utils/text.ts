@@ -1,4 +1,5 @@
-import * as lodash from 'lodash';
+import { randomInt } from 'crypto';
+
 export const generateRandomString = (
   characterType: 'alphanumeric' | 'numeric',
   tokenLength: number = 10,
@@ -16,7 +17,7 @@ export const generateRandomString = (
 
   // create token if value is not manually passed in
   for (let i = 0; i < tokenLength; i++) {
-    const randomIndex = lodash.random(chars.length - 1);
+    const randomIndex = randomInt(chars.length);
     token += chars[randomIndex];
   }
 

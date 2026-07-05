@@ -74,6 +74,19 @@ export class AuthService {
         'Refresh token invalid, already blacklisted',
       );
 
+    // 3. confirm the account behind the token still exists, so a deleted
+    // account can't keep refreshing tokens off a token issued while it existed
+    const user =
+      payload.role === Role.PATIENT
+        ? await this.prismaClient.patient.findUnique({
+            where: { id: payload.userId },
+          })
+        : await this.prismaClient.therapist.findUnique({
+            where: { id: payload.userId },
+          });
+
+    if (!user) throw new BadRequestException('Invalid refresh token');
+
     return payload;
   }
 
@@ -151,13 +164,13 @@ export class AuthService {
     let user: { id: string; password: string } | null = null;
 
     if (role === Role.PATIENT) {
-      user = await this.prismaClient.patient.findUnique({
+      user = await this.prismaClient.patient.findFirst({
         where: {
           OR: [{ email }, { phone }],
         },
       });
     } else if (role === Role.THERAPIST) {
-      user = await this.prismaClient.therapist.findUnique({
+      user = await this.prismaClient.therapist.findFirst({
         where: {
           OR: [{ email }, { phone }],
         },
@@ -165,6 +178,9 @@ export class AuthService {
     }
 
     if (!user) {
+      // run a dummy bcrypt compare so this path costs the same as the
+      // wrong-password path below, and doesn't leak account existence via timing
+      await this.authUtil.verifyPasswordTimingSafeNoOp(password);
       throw new BadRequestException('Invalid credentials');
     }
 
