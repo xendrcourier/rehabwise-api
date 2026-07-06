@@ -13,10 +13,7 @@ datasource db {
 }
 
 enum Language {
-  yo
   en
-  ha
-  ig
 }
 
 enum SessionStatus {
@@ -69,14 +66,14 @@ model Patient {
 }
 
 model Exercise {
-  id              String @id @default(uuid())
-  name_en         String
-  name_yo         String
-  video_watch_url String
-  video_doit_url  String
-  body_part       String
-  default_sets    Int    @default(3)
-  default_reps    Int    @default(10)
+  id               String @id @default(uuid())
+  name             String
+  video_watch_url  String
+  // video_doit_url   String
+  body_part        String
+  exercise_img_url String
+  default_sets     Int    @default(3)
+  default_reps     Int    @default(10)
 
   programs Program[]
 }

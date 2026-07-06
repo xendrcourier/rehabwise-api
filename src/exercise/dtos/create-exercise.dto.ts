@@ -5,6 +5,7 @@ import {
   Min,
   Max,
   MinLength,
+  IsUrl,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -31,10 +32,10 @@ export class CreateExerciseDto {
   // Storage paths — set after video upload to R2
   // Optional on create, therapist uploads videos separately
   @IsString()
-  @IsOptional()
+  @IsUrl()
   video_watch_path?: string;
 
   @IsString()
-  @IsOptional()
-  exercise_image_path?: string;
+  @IsUrl()
+  exercise_img_url!: string;
 }
