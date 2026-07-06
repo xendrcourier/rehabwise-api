@@ -2,15 +2,15 @@ import {
   Injectable,
   ExecutionContext,
   UnauthorizedException,
-  BadRequestException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
-import { Patient } from '@prisma/client';
+import { User } from 'generated/prisma/client';
+import { Role } from 'generated/prisma/enums';
 import { RequiresPatientVerified } from '../decorators/patient.verified.decorator';
 
 @Injectable()
-export class PatientGuard extends AuthGuard('jwt') {
+export class JwtGuard extends AuthGuard('jwt') {
   constructor(protected reflector: Reflector) {
     super();
   }
@@ -28,9 +28,13 @@ export class PatientGuard extends AuthGuard('jwt') {
     }
 
     const request = context.switchToHttp().getRequest();
-    const user = request.user as Patient;
+    const user = request.user as User;
 
-    if (requiresPatientVerified && !user.isEmailVerified) {
+    if (user.role !== Role.PATIENT) {
+      throw new UnauthorizedException('This route is patient-only.');
+    }
+
+    if (requiresPatientVerified && !user.isVerified) {
       throw new UnauthorizedException('Email verification is required.');
     }
 

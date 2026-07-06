@@ -36,47 +36,29 @@ enum Role {
   ADMIN
 }
 
-model Therapist {
+model User {
   id         String   @id @default(uuid())
   full_name  String
   email      String   @unique
   phone      String
   password   String
-  role       Role     @default(THERAPIST)
+  role       Role
   created_at DateTime @default(now())
 
-  patients Patient[]
-  alerts   Alert[]
-}
-
-model Patient {
-  id          String   @id @default(uuid())
-  full_name   String
-  phone       String
-  email       String   @unique
-  password    String
+  // Patient-only fields
   diagnosis   String?
   enrolled_at DateTime @default(now())
   isVerified  Boolean  @default(false)
 
-  therapist_id String
-  therapist    Therapist @relation(fields: [therapist_id], references: [id])
+  // Self-relation: the therapist assigned to a patient
+  therapist_id String?
+  therapist    User?  @relation("TherapistPatients", fields: [therapist_id], references: [id])
+  patients     User[] @relation("TherapistPatients")
 
-  programs Program[]
-  sessions Session[]
-  alerts   Alert[]
-}
-
-model Admin {
-  id        String @id @default(uuid())
-  full_name String
-  phone     String
-  email     String @unique
-  password  String
-  role      Role   @default(ADMIN)
-
-  sessions      AuthSession @relation(fields: [authSessionId], references: [id])
-  authSessionId String
+  programs         Program[]
+  sessions         Session[]
+  patient_alerts   Alert[]   @relation("PatientAlerts")
+  therapist_alerts Alert[]   @relation("TherapistAlerts")
 }
 
 model Exercise {
@@ -115,7 +97,7 @@ model Program {
   created_at    DateTime @default(now())
 
   patient_id String
-  patient    Patient @relation(fields: [patient_id], references: [id])
+  patient    User @relation(fields: [patient_id], references: [id])
 
   exercise_id String
   exercise    Exercise @relation(fields: [exercise_id], references: [id])
@@ -136,7 +118,7 @@ model Session {
   created_at     DateTime      @default(now())
 
   patient_id String
-  patient    Patient @relation(fields: [patient_id], references: [id])
+  patient    User @relation(fields: [patient_id], references: [id])
 
   program_id String
   program    Program @relation(fields: [program_id], references: [id])
@@ -150,10 +132,10 @@ model Alert {
   resolved_at  DateTime?
 
   patient_id String
-  patient    Patient @relation(fields: [patient_id], references: [id])
+  patient    User @relation("PatientAlerts", fields: [patient_id], references: [id])
 
   therapist_id String
-  therapist    Therapist @relation(fields: [therapist_id], references: [id])
+  therapist    User @relation("TherapistAlerts", fields: [therapist_id], references: [id])
 }
 
 model RefreshTokenBlacklist {
@@ -175,7 +157,6 @@ model AuthSession {
   last_accessed DateTime
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
-  admins        Admin[]
 
   @@index([last_accessed], map: "idx_auth_session_expires")
   @@map("auth_sessions")

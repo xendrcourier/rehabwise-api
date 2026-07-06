@@ -76,16 +76,12 @@ export class AuthService {
 
     // 3. confirm the account behind the token still exists, so a deleted
     // account can't keep refreshing tokens off a token issued while it existed
-    const user =
-      payload.role === Role.PATIENT
-        ? await this.prismaClient.patient.findUnique({
-            where: { id: payload.userId },
-          })
-        : await this.prismaClient.therapist.findUnique({
-            where: { id: payload.userId },
-          });
+    const user = await this.prismaClient.user.findUnique({
+      where: { id: payload.userId },
+    });
 
-    if (!user) throw new BadRequestException('Invalid refresh token');
+    if (!user || user.role !== payload.role)
+      throw new BadRequestException('Invalid refresh token');
 
     return payload;
   }
@@ -95,28 +91,28 @@ export class AuthService {
       data;
 
     if (
-      await this.prismaClient.patient.findFirst({
+      await this.prismaClient.user.findFirst({
         where: {
           OR: [{ email }, { phone }],
         },
       })
     ) {
       throw new BadRequestException(
-        'Patient with this email or phone number already exists',
+        'A user with this email or phone number already exists',
       );
     }
 
-    const therapist = await this.prismaClient.therapist.findUnique({
+    const therapist = await this.prismaClient.user.findUnique({
       where: { id: therapist_id },
     });
 
-    if (!therapist) {
+    if (!therapist || therapist.role !== Role.THERAPIST) {
       throw new BadRequestException('Invalid therapist_id');
     }
 
     const hashedPassword = await this.authUtil.hashPassword(password);
 
-    const patient = await this.prismaClient.patient.create({
+    const patient = await this.prismaClient.user.create({
       data: {
         email,
         full_name,
@@ -124,6 +120,7 @@ export class AuthService {
         password: hashedPassword,
         diagnosis,
         therapist_id,
+        role: Role.PATIENT,
       },
     });
 
@@ -139,25 +136,26 @@ export class AuthService {
     const { email, full_name, phone, password } = data;
 
     if (
-      await this.prismaClient.therapist.findFirst({
+      await this.prismaClient.user.findFirst({
         where: {
           OR: [{ email }, { phone }],
         },
       })
     ) {
       throw new BadRequestException(
-        'Therapist with this email or phone number already exists',
+        'A user with this email or phone number already exists',
       );
     }
 
     const hashedPassword = await this.authUtil.hashPassword(password);
 
-    const therapist = await this.prismaClient.therapist.create({
+    const therapist = await this.prismaClient.user.create({
       data: {
         email,
         full_name,
         phone,
         password: hashedPassword,
+        role: Role.THERAPIST,
       },
     });
 
@@ -171,21 +169,13 @@ export class AuthService {
 
   async login(data: AuthLoginDto, role: Role) {
     const { email, phone, password } = data;
-    let user: { id: string; password: string } | null = null;
 
-    if (role === Role.PATIENT) {
-      user = await this.prismaClient.patient.findFirst({
-        where: {
-          OR: [{ email }, { phone }],
-        },
-      });
-    } else if (role === Role.THERAPIST) {
-      user = await this.prismaClient.therapist.findFirst({
-        where: {
-          OR: [{ email }, { phone }],
-        },
-      });
-    }
+    const user = await this.prismaClient.user.findFirst({
+      where: {
+        role,
+        OR: [{ email }, { phone }],
+      },
+    });
 
     if (!user) {
       // run a dummy bcrypt compare so this path costs the same as the
