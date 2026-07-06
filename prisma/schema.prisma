@@ -57,6 +57,7 @@ model Patient {
   password    String
   diagnosis   String?
   enrolled_at DateTime @default(now())
+  isVerified  Boolean  @default(false)
 
   therapist_id String
   therapist    Therapist @relation(fields: [therapist_id], references: [id])
@@ -64,6 +65,18 @@ model Patient {
   programs Program[]
   sessions Session[]
   alerts   Alert[]
+}
+
+model Admin {
+  id        String @id @default(uuid())
+  full_name String
+  phone     String
+  email     String @unique
+  password  String
+  role      Role   @default(ADMIN)
+
+  sessions      AuthSession @relation(fields: [authSessionId], references: [id])
+  authSessionId String
 }
 
 model Exercise {
@@ -162,6 +175,7 @@ model AuthSession {
   last_accessed DateTime
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
+  admins        Admin[]
 
   @@index([last_accessed], map: "idx_auth_session_expires")
   @@map("auth_sessions")
