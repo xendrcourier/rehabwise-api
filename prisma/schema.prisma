@@ -12,8 +12,10 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Language {
-  en
+enum DifficultyLevel {
+  easy
+  medium
+  hard
 }
 
 enum SessionStatus {
@@ -53,7 +55,6 @@ model Patient {
   phone       String
   email       String   @unique
   password    String
-  language    Language @default(en)
   diagnosis   String?
   enrolled_at DateTime @default(now())
 
@@ -66,14 +67,26 @@ model Patient {
 }
 
 model Exercise {
-  id               String @id @default(uuid())
-  name             String
-  video_watch_url  String
+  id              String          @id @default(uuid())
+  name            String
+  video_watch_url String
   // video_doit_url   String
-  body_part        String
+  body_part       String
+  procedure       String
+  difficulty      DifficultyLevel @default(easy)
+
+  progression      String
   exercise_img_url String
   default_sets     Int    @default(3)
   default_reps     Int    @default(10)
+
+  // Progression chain
+  next_exercise_id  String?   @unique // points to the harder exercise
+  next_exercise     Exercise? @relation("Progression", fields: [next_exercise_id], references: [id])
+  previous_exercise Exercise? @relation("Progression")
+
+  // How many completed sessions before auto-unlocking next level
+  sessions_to_unlock_next Int @default(5)
 
   programs Program[]
 }
