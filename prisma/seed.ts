@@ -3,6 +3,7 @@ import * as bcrypt from 'bcrypt';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../generated/prisma/client';
 import { Role } from '../generated/prisma/enums';
+import { resolvePostgresConnectionString } from '../src/global/utils/database-url';
 
 const BCRYPT_SALT_ROUNDS = 10;
 
@@ -33,7 +34,7 @@ async function main() {
   }
 
   const adapter = new PrismaPg({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: resolvePostgresConnectionString(process.env.DATABASE_URL),
   });
   const prisma = new PrismaClient({ adapter });
 
