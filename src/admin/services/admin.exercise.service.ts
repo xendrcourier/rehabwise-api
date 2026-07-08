@@ -36,6 +36,10 @@ export class AdminExerciseService {
     return this.exerciseService.updateVideoPath(id, dto.video_watch_url);
   }
 
+  uploadVideo(id: string, file: Express.Multer.File) {
+    return this.exerciseService.uploadVideo(id, file);
+  }
+
   linkProgression(fromId: string, toId: string) {
     return this.exerciseService.linkProgression(fromId, toId);
   }

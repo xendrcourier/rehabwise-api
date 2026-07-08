@@ -7,10 +7,18 @@ import { PrismaService } from '../global/prisma/prisma.service';
 import { CreateExerciseDto } from './dtos/create-exercise.dto';
 import { UpdateExerciseDto } from './dtos/update-exercise.dto';
 import { SessionStatus } from '../../generated/prisma/enums';
+import { StorageService } from '../integrations/storage/storage.service';
+import { extname } from 'path';
+
+// R2/S3 presigned URLs cap out at 7 days
+const VIDEO_URL_EXPIRY_SECONDS = 7 * 24 * 60 * 60;
 
 @Injectable()
 export class ExerciseService {
-  constructor(private prismaClient: PrismaService) {}
+  constructor(
+    private prismaClient: PrismaService,
+    private storageService: StorageService,
+  ) {}
 
   async create(dto: CreateExerciseDto) {
     // If next_exercise_id provided, verify it exists
@@ -66,6 +74,28 @@ export class ExerciseService {
       where: { id },
       data: { video_watch_url },
     });
+  }
+
+  // Upload a video file to R2 and store a signed playback URL on the exercise
+  async uploadVideo(id: string, file: Express.Multer.File) {
+    await this.findOne(id);
+
+    if (!file.mimetype.startsWith('video/')) {
+      throw new BadRequestException('File must be a video');
+    }
+
+    const key = `exercises/${id}/${Date.now()}${extname(file.originalname)}`;
+    const path = await this.storageService.uploadVideo(
+      key,
+      file.buffer,
+      file.mimetype,
+    );
+    const video_watch_url = await this.storageService.getSignedUrl(
+      path,
+      VIDEO_URL_EXPIRY_SECONDS,
+    );
+
+    return this.updateVideoPath(id, video_watch_url);
   }
 
   // Link two exercises into a progression chain

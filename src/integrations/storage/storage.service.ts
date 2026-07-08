@@ -85,7 +85,7 @@ export class StorageService {
         }),
       );
       return true;
-    } catch {
+    } catch (err: any) {
       return false;
     }
   }
