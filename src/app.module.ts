@@ -8,6 +8,7 @@ import { ExerciseModule } from './exercise/exercise.module';
 import { ProgramModule } from './program/program.module';
 import { PrismaModule } from './global/prisma/prisma.module';
 import { AdminModule } from './admin/admin.module';
+import { StorageModule } from './integrations/storage/storage.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { AdminModule } from './admin/admin.module';
     ExerciseModule,
     ProgramModule,
     AdminModule,
+    StorageModule,
   ],
   controllers: [AppController],
   providers: [
