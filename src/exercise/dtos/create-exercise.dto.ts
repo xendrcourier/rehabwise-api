@@ -51,11 +51,13 @@ export class CreateExerciseDto {
   @IsString()
   next_exercise_id?: string;
 
+  @IsOptional()
   @IsString()
   @IsUrl()
-  video_watch_url!: string;
+  video_watch_url?: string;
 
+  @IsOptional()
   @IsString()
   @IsUrl()
-  exercise_img_url!: string;
+  exercise_img_url?: string;
 }

@@ -64,14 +64,14 @@ model User {
 model Exercise {
   id              String          @id @default(uuid())
   name            String
-  video_watch_url String
+  video_watch_url String?
   // video_doit_url   String
   body_part       String
   procedure       String
   difficulty      DifficultyLevel @default(easy)
 
   progression      String
-  exercise_img_url String
+  exercise_img_url String?
   default_sets     Int    @default(3)
   default_reps     Int    @default(10)
 

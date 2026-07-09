@@ -20,6 +20,7 @@ import { UpdateExerciseDto } from '../../exercise/dtos/update-exercise.dto';
 import { UpdateExerciseVideoDto } from '../../exercise/dtos/update-exercise-video.dto';
 
 const MAX_VIDEO_SIZE_BYTES = 500 * 1024 * 1024; // 500MB
+const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 
 @UseGuards(AdminGuard)
 @Controller('admin/exercises')
@@ -78,6 +79,22 @@ export class AdminExerciseController {
     file: Express.Multer.File,
   ) {
     return this.adminExerciseService.uploadVideo(id, file);
+  }
+
+  @Post(':id/image/upload')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadImage(
+    @Param('id') id: string,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: MAX_IMAGE_SIZE_BYTES }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    return this.adminExerciseService.uploadImage(id, file);
   }
 
   @Post(':fromId/link/:toId')

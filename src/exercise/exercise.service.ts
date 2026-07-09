@@ -8,6 +8,7 @@ import { CreateExerciseDto } from './dtos/create-exercise.dto';
 import { UpdateExerciseDto } from './dtos/update-exercise.dto';
 import { SessionStatus } from '../../generated/prisma/enums';
 import { StorageService } from '../integrations/storage/storage.service';
+import { CloudinaryService } from '../integrations/cloudinary/cloudinary.service';
 import { extname } from 'path';
 
 // R2/S3 presigned URLs cap out at 7 days
@@ -18,6 +19,7 @@ export class ExerciseService {
   constructor(
     private prismaClient: PrismaService,
     private storageService: StorageService,
+    private cloudinaryService: CloudinaryService,
   ) {}
 
   async create(dto: CreateExerciseDto) {
@@ -96,6 +98,30 @@ export class ExerciseService {
     );
 
     return this.updateVideoPath(id, video_watch_url);
+  }
+
+  async updateImagePath(id: string, exercise_img_url: string) {
+    await this.findOne(id);
+    return this.prismaClient.exercise.update({
+      where: { id },
+      data: { exercise_img_url },
+    });
+  }
+
+  // Upload an image file to Cloudinary and store its URL on the exercise
+  async uploadImage(id: string, file: Express.Multer.File) {
+    await this.findOne(id);
+
+    if (!file.mimetype.startsWith('image/')) {
+      throw new BadRequestException('File must be an image');
+    }
+
+    const result = await this.cloudinaryService.uploadImage(
+      file.buffer,
+      `exercises/${id}`,
+    );
+
+    return this.updateImagePath(id, result.secure_url);
   }
 
   // Link two exercises into a progression chain

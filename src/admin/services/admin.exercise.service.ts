@@ -40,6 +40,10 @@ export class AdminExerciseService {
     return this.exerciseService.uploadVideo(id, file);
   }
 
+  uploadImage(id: string, file: Express.Multer.File) {
+    return this.exerciseService.uploadImage(id, file);
+  }
+
   linkProgression(fromId: string, toId: string) {
     return this.exerciseService.linkProgression(fromId, toId);
   }
