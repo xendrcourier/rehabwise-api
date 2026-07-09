@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ExerciseService } from './exercise.service';
 import { ExerciseController } from './exercise.controller';
 import { MulterModule } from '@nestjs/platform-express';
-import { memoryStorage, memoryStorage as multerMemoryStorage } from 'multer';
+import { memoryStorage } from 'multer';
 
 @Module({
   controllers: [ExerciseController],

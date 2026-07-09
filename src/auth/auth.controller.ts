@@ -1,10 +1,21 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { OnboardTherapistDto } from './dtos/auth.therapist.dto';
 import { OnboardPatientDto } from './dtos/auth.patient.dto';
 import { AuthLoginDto } from './dtos/auth.login.dto';
 import { AuthRefreshDto } from './dtos/auth.refresh.dto';
 import { Role } from 'generated/prisma/enums';
+import { CurrentUser } from 'src/global/decorators/current.user.decorator';
+import { JwtGuard } from 'src/global/guards/jwt.guard';
+import { User } from 'generated/prisma/client';
 
 @Controller('auth')
 export class AuthController {
@@ -42,5 +53,13 @@ export class AuthController {
   @Post('refresh')
   refresh(@Body() dto: AuthRefreshDto) {
     return this.authService.refresh(dto);
+  }
+
+  @UseGuards(JwtGuard)
+  @Get('profile')
+  getUser(@CurrentUser() user: User) {
+    const { password, ...rest } = user;
+    void password;
+    return rest;
   }
 }

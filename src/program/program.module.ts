@@ -5,5 +5,6 @@ import { ProgramController } from './program.controller';
 @Module({
   controllers: [ProgramController],
   providers: [ProgramService],
+  exports: [ProgramService],
 })
 export class ProgramModule {}
