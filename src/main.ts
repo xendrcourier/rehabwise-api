@@ -13,9 +13,20 @@ async function bootstrap() {
     }),
   );
 
-  const allowedOrigins = ['http://localhost:5173'];
+  const configuredOrigins = (process.env.CORS_ORIGINS ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
   app.enableCors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // no Origin header (curl, server-to-server, mobile apps) - allow
+      if (!origin) return callback(null, true);
+      // any localhost port - Vite picks a new one whenever the default is busy
+      if (/^https?:\/\/localhost:\d+$/.test(origin)) return callback(null, true);
+      if (configuredOrigins.includes(origin)) return callback(null, true);
+      callback(new Error(`Not allowed by CORS: ${origin}`), false);
+    },
   });
   await app.listen(process.env.PORT ?? 5000);
 }

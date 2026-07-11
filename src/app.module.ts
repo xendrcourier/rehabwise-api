@@ -11,6 +11,7 @@ import { PrismaModule } from './global/prisma/prisma.module';
 import { AdminModule } from './admin/admin.module';
 import { StorageModule } from './integrations/storage/storage.module';
 import { CloudinaryModule } from './integrations/cloudinary/cloudinary.module';
+import { TherapistModule } from './therapist/therapist.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { CloudinaryModule } from './integrations/cloudinary/cloudinary.module';
     AdminModule,
     StorageModule,
     CloudinaryModule,
+    TherapistModule,
   ],
   controllers: [AppController],
   providers: [
