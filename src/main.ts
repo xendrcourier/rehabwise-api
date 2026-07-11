@@ -13,20 +13,8 @@ async function bootstrap() {
     }),
   );
 
-  const configuredOrigins = (process.env.CORS_ORIGINS ?? '')
-    .split(',')
-    .map((origin) => origin.trim().replace(/\/$/, ''))
-    .filter(Boolean);
-
   app.enableCors({
-    origin: (origin, callback) => {
-      // no Origin header (curl, server-to-server, mobile apps) - allow
-      if (!origin) return callback(null, true);
-      // any localhost port - Vite picks a new one whenever the default is busy
-      if (/^https?:\/\/localhost:\d+$/.test(origin)) return callback(null, true);
-      if (configuredOrigins.includes(origin)) return callback(null, true);
-      callback(new Error(`Not allowed by CORS: ${origin}`), false);
-    },
+    origin: true, // Temporarily allow all origins
     credentials: true,
   });
   await app.listen(process.env.PORT ?? 5000);
