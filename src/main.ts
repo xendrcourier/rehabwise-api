@@ -15,7 +15,7 @@ async function bootstrap() {
 
   const configuredOrigins = (process.env.CORS_ORIGINS ?? '')
     .split(',')
-    .map((origin) => origin.trim())
+    .map((origin) => origin.trim().replace(/\/$/, ''))
     .filter(Boolean);
 
   app.enableCors({
@@ -27,6 +27,7 @@ async function bootstrap() {
       if (configuredOrigins.includes(origin)) return callback(null, true);
       callback(new Error(`Not allowed by CORS: ${origin}`), false);
     },
+    credentials: true,
   });
   await app.listen(process.env.PORT ?? 5000);
 }
