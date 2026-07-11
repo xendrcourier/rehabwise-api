@@ -7,6 +7,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { OnboardTherapistDto } from './dtos/auth.therapist.dto';
 import { OnboardPatientDto } from './dtos/auth.patient.dto';
@@ -14,7 +15,6 @@ import { AuthLoginDto } from './dtos/auth.login.dto';
 import { AuthRefreshDto } from './dtos/auth.refresh.dto';
 import { Role } from 'generated/prisma/enums';
 import { CurrentUser } from 'src/global/decorators/current.user.decorator';
-import { JwtGuard } from 'src/global/guards/jwt.guard';
 import { User } from 'generated/prisma/client';
 
 @Controller('auth')
@@ -55,7 +55,7 @@ export class AuthController {
     return this.authService.refresh(dto);
   }
 
-  @UseGuards(JwtGuard)
+  @UseGuards(AuthGuard('jwt'))
   @Get('profile')
   getUser(@CurrentUser() user: User) {
     const { password, ...rest } = user;

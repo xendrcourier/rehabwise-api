@@ -45,4 +45,12 @@ export class ProgramService {
       include: { exercise: true },
     });
   }
+
+  async findByPatient(patientId: string) {
+    return this.prismaClient.program.findMany({
+      where: { patient_id: patientId },
+      include: { exercise: true },
+      orderBy: { created_at: 'desc' },
+    });
+  }
 }
