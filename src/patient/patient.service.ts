@@ -3,6 +3,8 @@ import { PrismaService } from '../global/prisma/prisma.service';
 import { ProgramService } from '../program/program.service';
 import { ExerciseService } from '../exercise/exercise.service';
 import { RemindersService } from '../reminders/reminders.service';
+import { SessionService } from '../session/session.service';
+import { LogSessionDto } from '../session/dtos/log-session.dto';
 
 @Injectable()
 export class PatientService {
@@ -11,7 +13,12 @@ export class PatientService {
     private readonly programService: ProgramService,
     private readonly exerciseService: ExerciseService,
     private readonly remindersService: RemindersService,
+    private readonly sessionService: SessionService,
   ) {}
+
+  logSession(patientId: string, dto: LogSessionDto) {
+    return this.sessionService.logSession(patientId, dto);
+  }
 
   getPrograms(patientId: string) {
     return this.programService.findByPatient(patientId);

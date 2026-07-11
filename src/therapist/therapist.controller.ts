@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { TherapistService } from './therapist.service';
 import { TherapistGuard } from '../global/guards/therapist.guard';
 import { CurrentUser } from '../global/decorators/current.user.decorator';
@@ -41,5 +41,18 @@ export class TherapistController {
     @Body() dto: CreateProgramDto,
   ) {
     return this.therapistService.assignProgram(therapistId, dto);
+  }
+
+  @Get('alerts')
+  listAlerts(@CurrentUser('id') therapistId: string) {
+    return this.therapistService.listAlerts(therapistId);
+  }
+
+  @Patch('alerts/:alertId/resolve')
+  resolveAlert(
+    @CurrentUser('id') therapistId: string,
+    @Param('alertId') alertId: string,
+  ) {
+    return this.therapistService.resolveAlert(therapistId, alertId);
   }
 }

@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { PatientService } from './patient.service';
 import { JwtGuard } from '../global/guards/jwt.guard';
 import { CurrentUser } from '../global/decorators/current.user.decorator';
 import { RegisterDeviceTokenDto } from './dtos/register-device-token.dto';
+import { LogSessionDto } from '../session/dtos/log-session.dto';
 
 @UseGuards(JwtGuard)
 @Controller('patient')
@@ -28,6 +29,11 @@ export class PatientController {
     @Param('programId') programId: string,
   ) {
     return this.patientService.getProgramVideoUrl(patientId, programId);
+  }
+
+  @Post('sessions')
+  logSession(@CurrentUser('id') patientId: string, @Body() dto: LogSessionDto) {
+    return this.patientService.logSession(patientId, dto);
   }
 
   @Patch('device-token')

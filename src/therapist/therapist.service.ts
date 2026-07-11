@@ -52,6 +52,26 @@ export class TherapistService {
     return this.programService.create(dto);
   }
 
+  listAlerts(therapistId: string) {
+    return this.prisma.alert.findMany({
+      where: { therapist_id: therapistId, resolved: false },
+      include: { patient: { select: patientSafeSelect } },
+      orderBy: { triggered_at: 'desc' },
+    });
+  }
+
+  async resolveAlert(therapistId: string, alertId: string) {
+    const alert = await this.prisma.alert.findUnique({ where: { id: alertId } });
+    if (!alert || alert.therapist_id !== therapistId) {
+      throw new NotFoundException(`Alert ${alertId} not found`);
+    }
+
+    return this.prisma.alert.update({
+      where: { id: alertId },
+      data: { resolved: true, resolved_at: new Date() },
+    });
+  }
+
   private async assertOwnPatient(therapistId: string, patientId: string) {
     const patient = await this.prisma.user.findUnique({
       where: { id: patientId },
