@@ -36,6 +36,13 @@ enum Role {
   ADMIN
 }
 
+enum ReminderChannel {
+  IN_APP
+  EMAIL
+  SMS
+  PUSH
+}
+
 model User {
   id         String   @id @default(uuid())
   full_name  String
@@ -50,6 +57,9 @@ model User {
   enrolled_at DateTime @default(now())
   isVerified  Boolean  @default(false)
 
+  // Device token for push notifications (FCM)
+  fcm_token String?
+
   // Self-relation: the therapist assigned to a patient
   therapist_id String?
   therapist    User?  @relation("TherapistPatients", fields: [therapist_id], references: [id])
@@ -59,12 +69,18 @@ model User {
   sessions         Session[]
   patient_alerts   Alert[]   @relation("PatientAlerts")
   therapist_alerts Alert[]   @relation("TherapistAlerts")
+  reminders        Reminder[]
 }
 
 model Exercise {
   id              String          @id @default(uuid())
   name            String
+  // Cached, short-lived playback URL (signed R2 URL, or an externally hosted URL)
   video_watch_url String?
+  // Stable R2 object key backing video_watch_url — null when video_watch_url was set
+  // manually (e.g. an external link) rather than uploaded, in which case it never expires
+  video_path            String?
+  video_url_expires_at  DateTime?
   // video_doit_url   String
   body_part       String
   procedure       String
@@ -95,6 +111,9 @@ model Program {
   end_date      DateTime
   is_active     Boolean  @default(true)
   created_at    DateTime @default(now())
+  // Last time a "do your exercises" reminder was sent for this program — dedupes to
+  // one reminder per day
+  last_reminded_at DateTime?
 
   patient_id String
   patient    User @relation(fields: [patient_id], references: [id])
@@ -102,7 +121,8 @@ model Program {
   exercise_id String
   exercise    Exercise @relation(fields: [exercise_id], references: [id])
 
-  sessions Session[]
+  sessions  Session[]
+  reminders Reminder[]
 }
 
 model Session {
@@ -136,6 +156,22 @@ model Alert {
 
   therapist_id String
   therapist    User @relation("TherapistAlerts", fields: [therapist_id], references: [id])
+}
+
+model Reminder {
+  id       String            @id @default(uuid())
+  message  String
+  channels ReminderChannel[]
+  read     Boolean           @default(false)
+  sent_at  DateTime          @default(now())
+
+  patient_id String
+  patient    User @relation(fields: [patient_id], references: [id])
+
+  program_id String?
+  program    Program? @relation(fields: [program_id], references: [id])
+
+  @@index([patient_id, read])
 }
 
 model RefreshTokenBlacklist {

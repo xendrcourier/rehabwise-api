@@ -1,8 +1,8 @@
-// if (!process.env.JWT_SECRET) {
-//   throw new Error(
-//     'JWT_SECRET environment variable is required and must not be empty',
-//   );
-// }
+if (!process.env.JWT_SECRET) {
+  throw new Error(
+    'JWT_SECRET environment variable is required and must not be empty',
+  );
+}
 
 export const CONFIGS = {
   PORT: process.env.PORT || 3000,

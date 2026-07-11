@@ -1,0 +1,61 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../global/prisma/prisma.service';
+import { ProgramService } from '../program/program.service';
+import { ExerciseService } from '../exercise/exercise.service';
+import { RemindersService } from '../reminders/reminders.service';
+
+@Injectable()
+export class PatientService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly programService: ProgramService,
+    private readonly exerciseService: ExerciseService,
+    private readonly remindersService: RemindersService,
+  ) {}
+
+  getPrograms(patientId: string) {
+    return this.programService.findByPatient(patientId);
+  }
+
+  getProgram(patientId: string, programId: string) {
+    return this.assertOwnProgram(patientId, programId);
+  }
+
+  async getProgramVideoUrl(patientId: string, programId: string) {
+    const program = await this.assertOwnProgram(patientId, programId);
+    const url = await this.exerciseService.getPlaybackUrl(program.exercise_id);
+    if (!url) {
+      throw new NotFoundException('No video available for this exercise');
+    }
+    return { url };
+  }
+
+  updateFcmToken(patientId: string, fcm_token: string) {
+    return this.prisma.user.update({
+      where: { id: patientId },
+      data: { fcm_token },
+      select: { id: true },
+    });
+  }
+
+  listReminders(patientId: string) {
+    return this.remindersService.listForPatient(patientId);
+  }
+
+  markReminderRead(patientId: string, reminderId: string) {
+    return this.remindersService.markRead(patientId, reminderId);
+  }
+
+  private async assertOwnProgram(patientId: string, programId: string) {
+    const program = await this.prisma.program.findUnique({
+      where: { id: programId },
+      include: { exercise: true },
+    });
+
+    if (!program || program.patient_id !== patientId) {
+      throw new NotFoundException(`Program ${programId} not found`);
+    }
+
+    return program;
+  }
+}

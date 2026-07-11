@@ -70,15 +70,17 @@ export class ExerciseService {
     return this.prismaClient.exercise.delete({ where: { id } });
   }
 
+  // Sets a video URL directly (e.g. an externally hosted link). Clears the
+  // R2-backed path/expiry so getPlaybackUrl treats it as non-expiring.
   async updateVideoPath(id: string, video_watch_url: string) {
     await this.findOne(id);
     return this.prismaClient.exercise.update({
       where: { id },
-      data: { video_watch_url },
+      data: { video_watch_url, video_path: null, video_url_expires_at: null },
     });
   }
 
-  // Upload a video file to R2 and store a signed playback URL on the exercise
+  // Upload a video file to R2 and cache a signed playback URL on the exercise
   async uploadVideo(id: string, file: Express.Multer.File) {
     await this.findOne(id);
 
@@ -92,12 +94,43 @@ export class ExerciseService {
       file.buffer,
       file.mimetype,
     );
+
+    return this.cacheSignedUrl(id, path);
+  }
+
+  // Return a playable video URL for an exercise, transparently refreshing the
+  // signed R2 URL when it's missing or close to expiry. URLs set manually via
+  // updateVideoPath (video_path === null) are returned as-is since they're
+  // assumed not to expire.
+  async getPlaybackUrl(id: string): Promise<string | null> {
+    const exercise = await this.findOne(id);
+    if (!exercise.video_watch_url) return null;
+    if (!exercise.video_path) return exercise.video_watch_url;
+
+    const refreshBufferMs = 24 * 60 * 60 * 1000; // refresh a day before expiry
+    const stillFresh =
+      exercise.video_url_expires_at &&
+      exercise.video_url_expires_at.getTime() - refreshBufferMs > Date.now();
+
+    if (stillFresh) return exercise.video_watch_url;
+
+    const updated = await this.cacheSignedUrl(id, exercise.video_path);
+    return updated.video_watch_url;
+  }
+
+  private async cacheSignedUrl(id: string, path: string) {
     const video_watch_url = await this.storageService.getSignedUrl(
       path,
       VIDEO_URL_EXPIRY_SECONDS,
     );
+    const video_url_expires_at = new Date(
+      Date.now() + VIDEO_URL_EXPIRY_SECONDS * 1000,
+    );
 
-    return this.updateVideoPath(id, video_watch_url);
+    return this.prismaClient.exercise.update({
+      where: { id },
+      data: { video_path: path, video_watch_url, video_url_expires_at },
+    });
   }
 
   async updateImagePath(id: string, exercise_img_url: string) {
