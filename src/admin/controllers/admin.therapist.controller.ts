@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { AdminTherapistService } from '../services/admin.therapist.service';
 import { AdminGuard } from '../../global/guards/admin.guard';
-import { OnboardTherapistDto } from '../../auth/dtos/auth.therapist.dto';
+import { InviteTherapistDto } from '../../auth/dtos/auth.therapist.dto';
 import { ReassignPatientDto } from '../dtos/reassign-patient.dto';
 
 @UseGuards(AdminGuard)
@@ -18,7 +18,7 @@ export class AdminTherapistController {
   constructor(private readonly adminTherapistService: AdminTherapistService) {}
 
   @Post()
-  create(@Body() dto: OnboardTherapistDto) {
+  create(@Body() dto: InviteTherapistDto) {
     return this.adminTherapistService.create(dto);
   }
 

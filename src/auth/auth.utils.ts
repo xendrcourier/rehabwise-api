@@ -30,7 +30,10 @@ export class AuthUtilService {
 
   // Generate access and refresh tokens
   generateJwtToken(
-    payload: { type: 'access' | 'refresh' } & Record<string, string>,
+    payload: { type: 'access' | 'refresh' | 'invite' } & Record<
+      string,
+      string
+    >,
     lifetime: number,
   ) {
     const token = jwt.sign(payload, CONFIGS.JWT_SECRET, {

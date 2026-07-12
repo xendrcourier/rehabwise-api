@@ -48,7 +48,9 @@ model User {
   full_name  String
   email      String   @unique
   phone      String
-  password   String
+  // Null until the account holder sets it (e.g. therapist invite flow) —
+  // an account with no password cannot log in yet.
+  password   String?
   role       Role
   created_at DateTime @default(now())
 

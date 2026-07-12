@@ -7,6 +7,6 @@ import { NotificationsService } from './notifications.service';
 @Global()
 @Module({
   providers: [EmailService, SmsService, PushService, NotificationsService],
-  exports: [NotificationsService],
+  exports: [NotificationsService, EmailService],
 })
 export class NotificationsModule {}

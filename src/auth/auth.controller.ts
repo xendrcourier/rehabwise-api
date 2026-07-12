@@ -9,7 +9,10 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
-import { OnboardTherapistDto } from './dtos/auth.therapist.dto';
+import {
+  OnboardTherapistDto,
+  SetTherapistPasswordDto,
+} from './dtos/auth.therapist.dto';
 import { OnboardPatientDto } from './dtos/auth.patient.dto';
 import { AuthLoginDto } from './dtos/auth.login.dto';
 import { AuthRefreshDto } from './dtos/auth.refresh.dto';
@@ -29,6 +32,12 @@ export class AuthController {
   @Post('onboard/patient')
   onboardPatient(@Body() dto: OnboardPatientDto) {
     return this.authService.onboardUser(dto);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('set-password')
+  setTherapistPassword(@Body() dto: SetTherapistPasswordDto) {
+    return this.authService.setTherapistPassword(dto);
   }
 
   @HttpCode(HttpStatus.OK)

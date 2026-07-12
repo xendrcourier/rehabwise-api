@@ -1,10 +1,13 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import * as ms from 'ms';
 import { PrismaService } from '../../global/prisma/prisma.service';
 import { AuthUtilService } from '../../auth/auth.utils';
-import { OnboardTherapistDto } from '../../auth/dtos/auth.therapist.dto';
+import { InviteTherapistDto } from '../../auth/dtos/auth.therapist.dto';
 import { ReassignPatientDto } from '../dtos/reassign-patient.dto';
 import { Role } from 'generated/prisma/enums';
 import { AdminUserService } from './admin.user.service';
+import { EmailService } from '../../integrations/notifications/email.service';
+import { CONFIGS } from '../../configs';
 
 const userSafeSelect = {
   id: true,
@@ -25,10 +28,11 @@ export class AdminTherapistService {
     private readonly prismaClient: PrismaService,
     private readonly authUtil: AuthUtilService,
     private readonly adminUserService: AdminUserService,
+    private readonly emailService: EmailService,
   ) {}
 
-  async create(dto: OnboardTherapistDto) {
-    const { email, full_name, phone, password } = dto;
+  async create(dto: InviteTherapistDto) {
+    const { email, full_name, phone } = dto;
 
     if (
       await this.prismaClient.user.findFirst({
@@ -40,18 +44,31 @@ export class AdminTherapistService {
       );
     }
 
-    const hashedPassword = await this.authUtil.hashPassword(password);
-
-    return this.prismaClient.user.create({
+    const therapist = await this.prismaClient.user.create({
       data: {
         email,
         full_name,
         phone,
-        password: hashedPassword,
+        password: null,
         role: Role.THERAPIST,
       },
       select: userSafeSelect,
     });
+
+    const inviteToken = this.authUtil.generateJwtToken(
+      { type: 'invite', userId: therapist.id },
+      ms(`${CONFIGS.INVITE_TOKEN_LIFETIME_DAYS}d`) / 1000,
+    );
+
+    const setPasswordUrl = `${CONFIGS.FRONTEND_URL}/therapist/set-password?token=${inviteToken}`;
+
+    await this.emailService.send(
+      email,
+      'You have been invited to RehabWise',
+      `Hi ${full_name},\n\nAn admin has created a therapist account for you on RehabWise. Set your password to activate your account:\n\n${setPasswordUrl}\n\nThis link expires in ${CONFIGS.INVITE_TOKEN_LIFETIME_DAYS} days.`,
+    );
+
+    return therapist;
   }
 
   async findAll() {

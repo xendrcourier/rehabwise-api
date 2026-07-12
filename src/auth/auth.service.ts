@@ -5,7 +5,10 @@ import { CONFIGS } from 'src/configs';
 import { Role } from 'generated/prisma/enums';
 import { generateRandomString } from 'src/global/utils/text';
 import * as ms from 'ms';
-import { OnboardTherapistDto } from './dtos/auth.therapist.dto';
+import {
+  OnboardTherapistDto,
+  SetTherapistPasswordDto,
+} from './dtos/auth.therapist.dto';
 import { OnboardPatientDto } from './dtos/auth.patient.dto';
 import { AuthRefreshDto } from './dtos/auth.refresh.dto';
 import { AuthLoginDto } from './dtos/auth.login.dto';
@@ -167,6 +170,59 @@ export class AuthService {
     return { __access, __refresh };
   }
 
+  async setTherapistPassword(data: SetTherapistPasswordDto) {
+    const { token, password } = data;
+
+    let payload: { type: string; userId: string };
+    try {
+      payload = this.authUtil.verifyToken(token) as {
+        type: string;
+        userId: string;
+      };
+    } catch {
+      throw new BadRequestException('Invalid or expired invite link');
+    }
+
+    if (payload.type !== 'invite') {
+      throw new BadRequestException('Invalid or expired invite link');
+    }
+
+    const user = await this.prismaClient.user.findUnique({
+      where: { id: payload.userId },
+    });
+
+    if (!user || user.role !== Role.THERAPIST) {
+      throw new BadRequestException('Invalid or expired invite link');
+    }
+
+    if (user.password) {
+      throw new BadRequestException(
+        'Password has already been set for this account. Please log in.',
+      );
+    }
+
+    const hashedPassword = await this.authUtil.hashPassword(password);
+
+    await this.prismaClient.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword },
+    });
+
+    await this.prismaClient.authSession.create({
+      data: {
+        user_id: user.id,
+        last_accessed: new Date(),
+      },
+    });
+
+    const { __access, __refresh } = await this.generateAuthTokenPairs(
+      user.id,
+      Role.THERAPIST,
+    );
+
+    return { __access, __refresh };
+  }
+
   async login(data: AuthLoginDto, role: Role) {
     const { email, phone, password } = data;
 
@@ -182,6 +238,13 @@ export class AuthService {
       // wrong-password path below, and doesn't leak account existence via timing
       await this.authUtil.verifyPasswordTimingSafeNoOp(password);
       throw new BadRequestException('Invalid credentials');
+    }
+
+    if (!user.password) {
+      await this.authUtil.verifyPasswordTimingSafeNoOp(password);
+      throw new BadRequestException(
+        'Account not yet activated. Please check your email to set your password.',
+      );
     }
 
     const isPasswordValid = await this.authUtil.verifyPassword(
