@@ -25,6 +25,7 @@ export class AuthService {
   generateAuthTokenPairs(userId: string, role: Role) {
     const __access = this.authUtil.generateJwtToken(
       { type: 'access', userId, role },
+      // @ts-ignore
       ms(`${CONFIGS.ACCESS_TOKEN_LIFETIME_MINS}m`) / 1000,
     );
 
@@ -32,6 +33,7 @@ export class AuthService {
 
     const __refresh = this.authUtil.generateJwtToken(
       { type: 'refresh', userId, reference: refreshReference, role },
+      // @ts-ignore
       ms(`${CONFIGS.REFRESH_TOKEN_LIFETIME_DAYS}d`) / 1000,
     );
 
@@ -46,6 +48,7 @@ export class AuthService {
       data: {
         reference: reference,
         expiresAt: new Date(
+          // @ts-ignore
           Date.now() + ms(`${CONFIGS.REFRESH_TOKEN_LIFETIME_DAYS}d`),
         ),
       },
@@ -90,8 +93,7 @@ export class AuthService {
   }
 
   async onboardUser(data: OnboardPatientDto) {
-    const { email, full_name, phone, password, diagnosis, therapist_id } =
-      data;
+    const { email, full_name, phone, password, therapist_id } = data;
 
     if (
       await this.prismaClient.user.findFirst({
@@ -121,7 +123,7 @@ export class AuthService {
         full_name,
         phone,
         password: hashedPassword,
-        diagnosis,
+        diagnosis: 'CVA',
         therapist_id,
         role: Role.PATIENT,
       },

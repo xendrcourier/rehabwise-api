@@ -28,10 +28,6 @@ export class OnboardPatientDto {
 
   @IsString()
   @IsNotEmpty()
-  diagnosis?: string;
-
-  @IsString()
-  @IsNotEmpty()
   @MinLength(8, { message: 'Password must be at least 8 characters long' })
   @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
     message:
