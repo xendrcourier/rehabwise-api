@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import ms from 'ms';
+import * as ms from 'ms';
 import { PrismaService } from '../../global/prisma/prisma.service';
 import { AuthUtilService } from '../../auth/auth.utils';
 import { InviteTherapistDto } from '../../auth/dtos/auth.therapist.dto';
@@ -57,6 +57,7 @@ export class AdminTherapistService {
 
     const inviteToken = this.authUtil.generateJwtToken(
       { type: 'invite', userId: therapist.id },
+      // @ts-ignore
       ms(`${CONFIGS.INVITE_TOKEN_LIFETIME_DAYS}d`) / 1000,
     );
 
