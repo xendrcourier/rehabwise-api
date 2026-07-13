@@ -11,5 +11,5 @@ export const CONFIGS = {
   INVITE_TOKEN_LIFETIME_DAYS: 7,
   JWT_SECRET: process.env.JWT_SECRET,
   BCRYPT_SALT_ROUNDS: 10,
-  FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
+  FRONTEND_URL: process.env.FRONTEND_URL || 'https://www.rehabwise.online',
 };

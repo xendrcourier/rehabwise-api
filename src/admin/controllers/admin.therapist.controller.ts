@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -43,5 +44,10 @@ export class AdminTherapistController {
     @Body() dto: ReassignPatientDto,
   ) {
     return this.adminTherapistService.reassignPatient(patientId, dto);
+  }
+
+  @Delete(':id')
+  deleteTherapist(@Param('id') id: string) {
+    return this.adminTherapistService.deleteTherapist(id);
   }
 }

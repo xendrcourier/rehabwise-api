@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import * as ms from 'ms';
+import ms from 'ms';
 import { PrismaService } from '../../global/prisma/prisma.service';
 import { AuthUtilService } from '../../auth/auth.utils';
 import { InviteTherapistDto } from '../../auth/dtos/auth.therapist.dto';
@@ -106,6 +106,32 @@ export class AdminTherapistService {
       data: { therapist_id: dto.therapist_id },
       select: userSafeSelect,
     });
+  }
+
+  async deleteTherapist(id: string) {
+    await this.assertTherapist(id);
+
+    const patientCount = await this.prismaClient.user.count({
+      where: { therapist_id: id },
+    });
+    if (patientCount > 0) {
+      throw new BadRequestException(
+        `Cannot delete — this therapist has ${patientCount} assigned patient(s). Reassign them first.`,
+      );
+    }
+
+    const alertCount = await this.prismaClient.alert.count({
+      where: { therapist_id: id },
+    });
+    if (alertCount > 0) {
+      throw new BadRequestException(
+        `Cannot delete — this therapist has ${alertCount} alert(s) on record.`,
+      );
+    }
+
+    await this.prismaClient.user.delete({ where: { id } });
+
+    return { message: 'Therapist deleted' };
   }
 
   private async assertTherapist(id: string) {
