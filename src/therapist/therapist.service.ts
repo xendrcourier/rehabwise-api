@@ -4,6 +4,7 @@ import { ExerciseService } from '../exercise/exercise.service';
 import { ProgramService } from '../program/program.service';
 import { CreateProgramDto } from '../program/dtos/create-program.dto';
 import { Role } from 'generated/prisma/enums';
+import { NotificationsService } from '../integrations/notifications/notifications.service';
 
 const patientSafeSelect = {
   id: true,
@@ -24,6 +25,7 @@ export class TherapistService {
     private readonly prisma: PrismaService,
     private readonly exerciseService: ExerciseService,
     private readonly programService: ProgramService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async getPatients(therapistId: string) {
@@ -41,6 +43,23 @@ export class TherapistService {
   async getPatientPrograms(therapistId: string, patientId: string) {
     await this.assertOwnPatient(therapistId, patientId);
     return this.programService.findByPatient(patientId);
+  }
+
+  async verifyPatient(therapistId: string, patientId: string) {
+    await this.assertOwnPatient(therapistId, patientId);
+
+    const patient = await this.prisma.user.update({
+      where: { id: patientId },
+      data: { isVerified: true },
+      select: patientSafeSelect,
+    });
+
+    await this.notifications.notify(patient, {
+      title: 'Your RehabWise account is verified',
+      body: `Hi ${patient.full_name}, your therapist has verified your account — you're all set to start your rehab program.`,
+    });
+
+    return patient;
   }
 
   listExercises() {

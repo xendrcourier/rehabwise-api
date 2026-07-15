@@ -30,6 +30,14 @@ export class TherapistController {
     return this.therapistService.getPatientPrograms(therapistId, patientId);
   }
 
+  @Patch('patients/:patientId/verify')
+  verifyPatient(
+    @CurrentUser('id') therapistId: string,
+    @Param('patientId') patientId: string,
+  ) {
+    return this.therapistService.verifyPatient(therapistId, patientId);
+  }
+
   @Get('exercises')
   listExercises() {
     return this.therapistService.listExercises();
