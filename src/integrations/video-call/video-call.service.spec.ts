@@ -71,4 +71,38 @@ describe('VideoCallService', () => {
       'https://rehabwise.daily.co/rehabwise-therapist-1-patient-1',
     );
   });
+
+  it('reuses the same Daily room when the server reports that it already exists', async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ name: 'rehabwise-therapist-1-patient-1' }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 409,
+        text: async () =>
+          JSON.stringify({
+            error: 'invalid-request-error',
+            info: 'a room named rehabwise-therapist-1-patient-1 already exists',
+          }),
+      });
+
+    const first = await service.createSession({
+      initiatorId: 'therapist-1',
+      participantId: 'patient-1',
+      participantName: 'Dr. Rivera',
+    });
+
+    const second = await service.createSession({
+      initiatorId: 'therapist-1',
+      participantId: 'patient-1',
+      participantName: 'Dr. Rivera',
+    });
+
+    expect(first.roomName).toBe(second.roomName);
+    expect(second.joinUrl).toBe(
+      'https://rehabwise.daily.co/rehabwise-therapist-1-patient-1',
+    );
+  });
 });

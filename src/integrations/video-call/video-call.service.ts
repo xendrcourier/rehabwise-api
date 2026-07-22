@@ -6,6 +6,11 @@ interface DailyRoomResponse {
   url?: string;
 }
 
+interface DailyErrorResponse {
+  error?: string;
+  info?: string;
+}
+
 export interface CreateVideoSessionInput {
   initiatorId: string;
   participantId: string;
@@ -56,9 +61,26 @@ export class VideoCallService {
     });
 
     if (!response.ok) {
-      const error = await response.text();
+      const errorText = await response.text();
+      const errorPayload = this.tryParseJson<DailyErrorResponse>(errorText);
+      const isAlreadyExistsError =
+        response.status === 409 ||
+        (errorPayload?.error === 'invalid-request-error' &&
+          /already exists/i.test(errorPayload.info ?? ''));
+
+      if (isAlreadyExistsError) {
+        const roomUrl = `${domain}/${roomName}`;
+        return {
+          roomName,
+          joinUrl: roomUrl,
+          provider: 'daily',
+          apiKeyConfigured: true,
+          createdAt: new Date().toISOString(),
+        };
+      }
+
       throw new InternalServerErrorException(
-        `Failed to create Daily room: ${error}`,
+        `Failed to create Daily room: ${errorText}`,
       );
     }
 
@@ -78,5 +100,13 @@ export class VideoCallService {
   private buildRoomName(initiatorId: string, participantId: string) {
     const slug = `${initiatorId}-${participantId}`.toLowerCase();
     return `rehabwise-${slug.replace(/[^a-z0-9]+/g, '-')}`;
+  }
+
+  private tryParseJson<T>(value: string): T | null {
+    try {
+      return JSON.parse(value) as T;
+    } catch {
+      return null;
+    }
   }
 }
