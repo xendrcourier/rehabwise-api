@@ -6,10 +6,18 @@ import { ProgramModule } from '../program/program.module';
 import { ExerciseModule } from '../exercise/exercise.module';
 import { RemindersModule } from '../reminders/reminders.module';
 import { SessionModule } from '../session/session.module';
+import { VideoCallModule } from 'src/integrations/video-call/video-call.module';
 
 @Module({
   controllers: [PatientController],
   providers: [PatientService],
-  imports: [PrismaModule, ProgramModule, ExerciseModule, RemindersModule, SessionModule],
+  imports: [
+    PrismaModule,
+    ProgramModule,
+    ExerciseModule,
+    RemindersModule,
+    SessionModule,
+    VideoCallModule,
+  ],
 })
 export class PatientModule {}
