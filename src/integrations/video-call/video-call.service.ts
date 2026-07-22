@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 export interface CreateVideoSessionInput {
   initiatorId: string;
@@ -9,23 +10,36 @@ export interface CreateVideoSessionInput {
 export interface VideoSessionResponse {
   roomName: string;
   joinUrl: string;
-  provider: 'jitsi';
+  provider: 'daily';
+  apiKeyConfigured: boolean;
   createdAt: string;
 }
 
 @Injectable()
 export class VideoCallService {
+  constructor(private readonly configService: ConfigService) {}
   async createSession(
     input: CreateVideoSessionInput,
   ): Promise<VideoSessionResponse> {
     const roomName = this.buildRoomName(input.initiatorId, input.participantId);
-    const baseUrl = process.env.VIDEO_CALL_BASE_URL || 'https://meet.jit.si';
-    const roomUrl = `${baseUrl}/${roomName}`;
+    const domain =
+      this.configService.get<string>('DAILY_DOMAIN') ||
+      'https://rehabwise.daily.co';
+    const apiKey = this.configService.get<string>('DAILY_API_KEY');
+
+    if (!apiKey) {
+      throw new InternalServerErrorException(
+        'DAILY_API_KEY is not configured. Set it in the environment before creating a Daily room.',
+      );
+    }
+
+    const roomUrl = `${domain}/${roomName}`;
 
     return {
       roomName,
       joinUrl: roomUrl,
-      provider: 'jitsi',
+      provider: 'daily',
+      apiKeyConfigured: true,
       createdAt: new Date().toISOString(),
     };
   }
