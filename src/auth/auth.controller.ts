@@ -19,45 +19,53 @@ import { AuthRefreshDto } from './dtos/auth.refresh.dto';
 import { Role } from 'generated/prisma/enums';
 import { CurrentUser } from 'src/global/decorators/current.user.decorator';
 import { User } from 'generated/prisma/client';
+import { Public } from '../global/decorators/public.decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post('onboard/therapist')
   onboardTherapist(@Body() dto: OnboardTherapistDto) {
     return this.authService.onboardTherapist(dto);
   }
 
+  @Public()
   @Post('onboard/patient')
   onboardPatient(@Body() dto: OnboardPatientDto) {
     return this.authService.onboardUser(dto);
   }
 
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Post('set-password')
   setTherapistPassword(@Body() dto: SetTherapistPasswordDto) {
     return this.authService.setTherapistPassword(dto);
   }
 
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Post('login/therapist')
   loginTherapist(@Body() dto: AuthLoginDto) {
     return this.authService.login(dto, Role.THERAPIST);
   }
 
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Post('login/patient')
   loginPatient(@Body() dto: AuthLoginDto) {
     return this.authService.login(dto, Role.PATIENT);
   }
 
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Post('logout')
   logout(@Body() dto: AuthRefreshDto) {
     return this.authService.logout(dto);
   }
 
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Post('refresh')
   refresh(@Body() dto: AuthRefreshDto) {
