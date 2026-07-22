@@ -1,6 +1,11 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
+interface DailyRoomResponse {
+  name?: string;
+  url?: string;
+}
+
 export interface CreateVideoSessionInput {
   initiatorId: string;
   participantId: string;
@@ -33,10 +38,36 @@ export class VideoCallService {
       );
     }
 
-    const roomUrl = `${domain}/${roomName}`;
+    const response = await fetch('https://api.daily.co/v1/rooms', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: roomName,
+        properties: {
+          enable_chat: true,
+          start_video_off: false,
+          start_audio_off: false,
+          enable_knocking: true,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new InternalServerErrorException(
+        `Failed to create Daily room: ${error}`,
+      );
+    }
+
+    const payload = (await response.json()) as DailyRoomResponse;
+    const createdRoomName = payload.name || roomName;
+    const roomUrl = `${domain}/${createdRoomName}`;
 
     return {
-      roomName,
+      roomName: createdRoomName,
       joinUrl: roomUrl,
       provider: 'daily',
       apiKeyConfigured: true,
