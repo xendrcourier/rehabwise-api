@@ -5,6 +5,7 @@ import { ExerciseService } from '../exercise/exercise.service';
 import { RemindersService } from '../reminders/reminders.service';
 import { SessionService } from '../session/session.service';
 import { LogSessionDto } from '../session/dtos/log-session.dto';
+import { VideoCallService } from '../integrations/video-call/video-call.service';
 
 @Injectable()
 export class PatientService {
@@ -14,6 +15,7 @@ export class PatientService {
     private readonly exerciseService: ExerciseService,
     private readonly remindersService: RemindersService,
     private readonly sessionService: SessionService,
+    private readonly videoCallService: VideoCallService,
   ) {}
 
   logSession(patientId: string, dto: LogSessionDto) {
@@ -35,6 +37,23 @@ export class PatientService {
       throw new NotFoundException('No video available for this exercise');
     }
     return { url };
+  }
+
+  async createVideoCallLink(patientId: string, therapistId: string) {
+    const patient = await this.prisma.user.findUnique({
+      where: { id: patientId },
+      select: { id: true, therapist_id: true },
+    });
+
+    if (!patient || patient.therapist_id !== therapistId) {
+      throw new NotFoundException('Therapist relationship not found');
+    }
+
+    return this.videoCallService.createSession({
+      initiatorId: patientId,
+      participantId: therapistId,
+      participantName: 'Patient Session',
+    });
   }
 
   updateFcmToken(patientId: string, fcm_token: string) {

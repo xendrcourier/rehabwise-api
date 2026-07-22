@@ -5,6 +5,7 @@ import { ProgramService } from '../program/program.service';
 import { CreateProgramDto } from '../program/dtos/create-program.dto';
 import { Role } from 'generated/prisma/enums';
 import { NotificationsService } from '../integrations/notifications/notifications.service';
+import { VideoCallService } from '../integrations/video-call/video-call.service';
 
 const patientSafeSelect = {
   id: true,
@@ -26,6 +27,7 @@ export class TherapistService {
     private readonly exerciseService: ExerciseService,
     private readonly programService: ProgramService,
     private readonly notifications: NotificationsService,
+    private readonly videoCallService: VideoCallService,
   ) {}
 
   async getPatients(therapistId: string) {
@@ -43,6 +45,15 @@ export class TherapistService {
   async getPatientPrograms(therapistId: string, patientId: string) {
     await this.assertOwnPatient(therapistId, patientId);
     return this.programService.findByPatient(patientId);
+  }
+
+  async createVideoCallLink(therapistId: string, patientId: string) {
+    await this.assertOwnPatient(therapistId, patientId);
+    return this.videoCallService.createSession({
+      initiatorId: therapistId,
+      participantId: patientId,
+      participantName: 'Therapist Session',
+    });
   }
 
   async verifyPatient(therapistId: string, patientId: string) {
@@ -80,7 +91,9 @@ export class TherapistService {
   }
 
   async resolveAlert(therapistId: string, alertId: string) {
-    const alert = await this.prisma.alert.findUnique({ where: { id: alertId } });
+    const alert = await this.prisma.alert.findUnique({
+      where: { id: alertId },
+    });
     if (!alert || alert.therapist_id !== therapistId) {
       throw new NotFoundException(`Alert ${alertId} not found`);
     }

@@ -16,6 +16,7 @@ import { NotificationsModule } from './integrations/notifications/notifications.
 import { TherapistModule } from './therapist/therapist.module';
 import { PatientModule } from './patient/patient.module';
 import { RemindersModule } from './reminders/reminders.module';
+import { VideoCallModule } from './integrations/video-call/video-call.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { RemindersModule } from './reminders/reminders.module';
     TherapistModule,
     PatientModule,
     RemindersModule,
+    VideoCallModule,
   ],
   controllers: [AppController],
   providers: [

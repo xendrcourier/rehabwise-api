@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { PatientService } from './patient.service';
 import { JwtGuard } from '../global/guards/jwt.guard';
 import { CurrentUser } from '../global/decorators/current.user.decorator';
@@ -29,6 +37,14 @@ export class PatientController {
     @Param('programId') programId: string,
   ) {
     return this.patientService.getProgramVideoUrl(patientId, programId);
+  }
+
+  @Post('video-call/:therapistId')
+  createVideoCallLink(
+    @CurrentUser('id') patientId: string,
+    @Param('therapistId') therapistId: string,
+  ) {
+    return this.patientService.createVideoCallLink(patientId, therapistId);
   }
 
   @Post('sessions')
